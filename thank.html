@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Confirmed</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,.1);
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: black;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h1>🎉 Thank You!</h1>
+    <p>Your order has been placed successfully.</p>
+    <p>Order ID: <b>#DD${Math.floor(Math.random()*100000)}</b></p>
+    <button onclick="window.location.href='index.html'">Back to Store</button>
+  </div>
+</body>
+</html>
