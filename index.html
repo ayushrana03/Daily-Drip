@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Drip</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .collections {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .collections button {
+      padding: 8px 14px;
+      font-size: 14px;
+      background: #eaeaea;
+      color: #000;
+    }
+
+    .collections button.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .product {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+
+    .price {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 8px 0;
+    }
+
+    button {
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .cart {
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+      text-align: center;
+    }
+
+    .cart p {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin: 6px 0;
+    }
+
+    .cart button {
+      padding: 4px 8px;
+      font-size: 13px;
+      background: black;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>Daily Drip</h1>
+
+    <!-- GENDER -->
+    <div class="collections gender-buttons">
+      <button onclick="selectGender('Men')">Men</button>
+      <button onclick="selectGender('Women')">Women</button>
+    </div>
+
+    <!-- COLLECTIONS -->
+    <div class="collections category-buttons" id="categoryButtons" style="display:none;">
+      <button onclick="showCollection('Oversized Tees')">Oversized Tees</button>
+      <button onclick="showCollection('Hoodies')">Hoodies</button>
+      <button onclick="showCollection('Joggers')">Joggers</button>
+      <button onclick="showCollection('Accessories')">Accessories</button>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="productList"></div>
+
+    <!-- CART -->
+    <div class="cart">
+      <h2>Cart</h2>
+      <div id="cartItems"></div>
+      <h3 id="totalPrice">Total: ₹0</h3>
+      <button onclick="goToCheckout()">Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    const products = [
+      { name: "Oversized Tee - Black", price: 699, category: "Oversized Tees", gender: "Men" },
+      { name: "Oversized Tee - White", price: 699, category: "Oversized Tees", gender: "Women" },
+      { name: "Hoodie - Grey", price: 1299, category: "Hoodies", gender: "Men" },
+      { name: "Hoodie - Pink", price: 1299, category: "Hoodies", gender: "Women" },
+      { name: "Joggers - Black", price: 999, category: "Joggers", gender: "Men" },
+      { name: "Cap - Classic", price: 399, category: "Accessories", gender: "Unisex" }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let selectedGender = "";
+
+    function selectGender(gender) {
+      selectedGender = gender;
+
+      document.querySelectorAll(".gender-buttons button").forEach(btn => {
+        btn.classList.toggle("active", btn.innerText === gender);
+      });
+
+      document.querySelectorAll(".category-buttons button").forEach(btn => {
+        btn.classList.remove("active");
+      });
+
+      document.getElementById("categoryButtons").style.display = "flex";
+      document.getElementById("productList").innerHTML = "";
+    }
+
+    function showCollection(category) {
+      document.querySelectorAll(".category-buttons button").forEach(btn => {
+        btn.classList.toggle("active", btn.innerText === category);
+      });
+
+      const list = document.getElementById("productList");
+      list.innerHTML = "";
+
+      const filtered = products.filter(p =>
+        p.category === category &&
+        (p.gender === selectedGender || p.gender === "Unisex")
+      );
+
+      if (filtered.length === 0) {
+        list.innerHTML = "<p>No products available</p>";
+        return;
+      }
+
+      filtered.forEach(p => {
+        list.innerHTML += `
+          <div class="product">
+            <h2>${p.name}</h2>
+            <div class="price">₹${p.price}</div>
+            <button onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(name, price) {
+      const item = cart.find(i => i.name === name);
+      if (item) item.qty++;
+      else cart.push({ name, price, qty: 1 });
+      saveAndRender();
+    }
+
+    function increaseQty(name) {
+      cart.find(i => i.name === name).qty++;
+      saveAndRender();
+    }
+
+    function decreaseQty(name) {
+      const item = cart.find(i => i.name === name);
+      if (item.qty > 1) {
+        item.qty--;
+        saveAndRender();
+      }
+    }
+
+    function removeItem(name) {
+      cart = cart.filter(i => i.name !== name);
+      saveAndRender();
+    }
+
+    function saveAndRender() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+    }
+
+    function renderCart() {
+      const cartItems = document.getElementById("cartItems");
+      const totalPrice = document.getElementById("totalPrice");
+
+      cartItems.innerHTML = "";
+      let total = 0;
+
+      if (cart.length === 0) {
+        cartItems.innerHTML = "<p>Your cart is empty 🛒</p>";
+        totalPrice.innerText = "Total: ₹0";
+        return;
+      }
+
+      cart.forEach(item => {
+        total += item.price * item.qty;
+        cartItems.innerHTML += `
+          <p>
+            ${item.name}
+            <button onclick="decreaseQty('${item.name}')" ${item.qty === 1 ? "disabled" : ""}>-</button>
+            ${item.qty}
+            <button onclick="increaseQty('${item.name}')">+</button>
+            ₹${item.price * item.qty}
+            <button onclick="removeItem('${item.name}')">✕</button>
+          </p>
+        `;
+      });
+
+      totalPrice.innerText = "Total: ₹" + total;
+    }
+
+    function goToCheckout() {
+      if (cart.length === 0) {
+        alert("Cart is empty");
+        return;
+      }
+      window.location.href = "checkout.html";
+    }
+
+    renderCart();
+  </script>
+
+</body>
+</html>
