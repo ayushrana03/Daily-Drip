@@ -73,6 +73,31 @@
       cursor: not-allowed;
     }
 
+    /* SIZE CSS */
+    .sizes {
+      margin: 10px 0;
+    }
+
+    .size-options {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .size-btn {
+      padding: 5px 10px;
+      border: 1px solid #000;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .size-btn.active {
+      background: black;
+      color: white;
+    }
+
     .cart {
       border-top: 1px solid #ddd;
       padding-top: 15px;
@@ -85,6 +110,7 @@
       align-items: center;
       gap: 6px;
       margin: 6px 0;
+      flex-wrap: wrap;
     }
 
     .cart button {
@@ -139,16 +165,13 @@
 
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     let selectedGender = "";
+    let selectedSize = null;
 
     function selectGender(gender) {
       selectedGender = gender;
 
       document.querySelectorAll(".gender-buttons button").forEach(btn => {
         btn.classList.toggle("active", btn.innerText === gender);
-      });
-
-      document.querySelectorAll(".category-buttons button").forEach(btn => {
-        btn.classList.remove("active");
       });
 
       document.getElementById("categoryButtons").style.display = "flex";
@@ -178,34 +201,62 @@
           <div class="product">
             <h2>${p.name}</h2>
             <div class="price">₹${p.price}</div>
-            <button onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
+
+            <div class="sizes">
+              <p>Select Size:</p>
+              <div class="size-options">
+                <button class="size-btn" onclick="selectSize(this,'XS')">XS</button>
+                <button class="size-btn" onclick="selectSize(this,'S')">S</button>
+                <button class="size-btn" onclick="selectSize(this,'M')">M</button>
+                <button class="size-btn" onclick="selectSize(this,'L')">L</button>
+                <button class="size-btn" onclick="selectSize(this,'XL')">XL</button>
+                <button class="size-btn" onclick="selectSize(this,'XXL')">XXL</button>
+              </div>
+            </div>
+
+            <button onclick="addToCartWithSize('${p.name}', ${p.price})">
+              Add to Cart
+            </button>
           </div>
         `;
       });
     }
 
-    function addToCart(name, price) {
-      const item = cart.find(i => i.name === name);
-      if (item) item.qty++;
-      else cart.push({ name, price, qty: 1 });
-      saveAndRender();
+    function selectSize(btn, size) {
+      const product = btn.closest(".product");
+      product.querySelectorAll(".size-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedSize = size;
     }
 
-    function increaseQty(name) {
-      cart.find(i => i.name === name).qty++;
-      saveAndRender();
-    }
-
-    function decreaseQty(name) {
-      const item = cart.find(i => i.name === name);
-      if (item.qty > 1) {
-        item.qty--;
-        saveAndRender();
+    function addToCartWithSize(name, price) {
+      if (!selectedSize) {
+        alert("Please select a size first");
+        return;
       }
+
+      const item = cart.find(i => i.name === name && i.size === selectedSize);
+
+      if (item) item.qty++;
+      else cart.push({ name, price, size: selectedSize, qty: 1 });
+
+      selectedSize = null;
+      saveAndRender();
     }
 
-    function removeItem(name) {
-      cart = cart.filter(i => i.name !== name);
+    function increaseQty(name, size) {
+      cart.find(i => i.name === name && i.size === size).qty++;
+      saveAndRender();
+    }
+
+    function decreaseQty(name, size) {
+      const item = cart.find(i => i.name === name && i.size === size);
+      if (item.qty > 1) item.qty--;
+      saveAndRender();
+    }
+
+    function removeItem(name, size) {
+      cart = cart.filter(i => !(i.name === name && i.size === size));
       saveAndRender();
     }
 
@@ -231,12 +282,12 @@
         total += item.price * item.qty;
         cartItems.innerHTML += `
           <p>
-            ${item.name}
-            <button onclick="decreaseQty('${item.name}')" ${item.qty === 1 ? "disabled" : ""}>-</button>
+            ${item.name} (${item.size})
+            <button onclick="decreaseQty('${item.name}','${item.size}')" ${item.qty === 1 ? "disabled" : ""}>-</button>
             ${item.qty}
-            <button onclick="increaseQty('${item.name}')">+</button>
+            <button onclick="increaseQty('${item.name}','${item.size}')">+</button>
             ₹${item.price * item.qty}
-            <button onclick="removeItem('${item.name}')">✕</button>
+            <button onclick="removeItem('${item.name}','${item.size}')">✕</button>
           </p>
         `;
       });
