@@ -25,7 +25,7 @@
       margin-bottom: 20px;
     }
 
-    input, textarea {
+    input, select {
       width: 100%;
       padding: 10px;
       margin-bottom: 12px;
@@ -64,6 +64,10 @@
       font-weight: bold;
       margin-top: 10px;
     }
+
+    #cartItems p {
+      margin: 8px 0;
+    }
   </style>
 </head>
 
@@ -72,55 +76,46 @@
   <div class="container">
     <h1>Checkout</h1>
 
-    <input type="text" id="name" placeholder="Full Name" required>
-    <input type="tel" id="phone" placeholder="Phone Number" required>
-    <input type="text" id="house" placeholder="House Number" required>
-    <input type="text" id="street" placeholder="Street Address" required>
-    <input type="text" id="city" placeholder="City" required>
-    <select id="state" required>
-  <option value="">Select State / UT</option>
+    <!-- CART ITEMS -->
+    <div id="cartItems"></div>
 
-  <option>Andhra Pradesh</option>
-  <option>Arunachal Pradesh</option>
-  <option>Assam</option>
-  <option>Bihar</option>
-  <option>Chhattisgarh</option>
-  <option>Goa</option>
-  <option>Gujarat</option>
-  <option>Haryana</option>
-  <option>Himachal Pradesh</option>
-  <option>Jharkhand</option>
-  <option>Karnataka</option>
-  <option>Kerala</option>
-  <option>Madhya Pradesh</option>
-  <option>Maharashtra</option>
-  <option>Manipur</option>
-  <option>Meghalaya</option>
-  <option>Mizoram</option>
-  <option>Nagaland</option>
-  <option>Odisha</option>
-  <option>Punjab</option>
-  <option>Rajasthan</option>
-  <option>Sikkim</option>
-  <option>Tamil Nadu</option>
-  <option>Telangana</option>
-  <option>Tripura</option>
-  <option>Uttar Pradesh</option>
-  <option>Uttarakhand</option>
-  <option>West Bengal</option>
+    <!-- ADDRESS -->
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="tel" id="phone" placeholder="Phone Number">
+    <input type="text" id="house" placeholder="House Number">
+    <input type="text" id="street" placeholder="Street Address">
+    <input type="text" id="city" placeholder="City">
 
-  <option>Andaman and Nicobar Islands</option>
-  <option>Chandigarh</option>
-  <option>Dadra and Nagar Haveli and Daman and Diu</option>
-  <option>Delhi</option>
-  <option>Jammu and Kashmir</option>
-  <option>Ladakh</option>
-  <option>Lakshadweep</option>
-  <option>Puducherry</option>
-</select>
+    <select id="state">
+      <option value="">Select State / UT</option>
+      <option>Andhra Pradesh</option>
+      <option>Arunachal Pradesh</option>
+      <option>Assam</option>
+      <option>Bihar</option>
+      <option>Chhattisgarh</option>
+      <option>Goa</option>
+      <option>Gujarat</option>
+      <option>Haryana</option>
+      <option>Himachal Pradesh</option>
+      <option>Jharkhand</option>
+      <option>Karnataka</option>
+      <option>Kerala</option>
+      <option>Madhya Pradesh</option>
+      <option>Maharashtra</option>
+      <option>Odisha</option>
+      <option>Punjab</option>
+      <option>Rajasthan</option>
+      <option>Tamil Nadu</option>
+      <option>Telangana</option>
+      <option>Uttar Pradesh</option>
+      <option>Uttarakhand</option>
+      <option>West Bengal</option>
+      <option>Delhi</option>
+    </select>
 
-    <input type="text" id="pincode" placeholder="Pincode/ZIP Code" required>
+    <input type="text" id="pincode" placeholder="Pincode">
 
+    <!-- ORDER SUMMARY -->
     <div class="summary" id="orderSummary"></div>
 
     <button onclick="placeOrder()">Place Order</button>
@@ -129,6 +124,30 @@
   <script>
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+    /* ---------- CART ITEMS ---------- */
+    function renderCartItems() {
+      const cartDiv = document.getElementById("cartItems");
+      cartDiv.innerHTML = "<h3>Your Items</h3>";
+
+      if (cart.length === 0) {
+        cartDiv.innerHTML += "<p>Your cart is empty</p>";
+        return;
+      }
+
+      cart.forEach(item => {
+        cartDiv.innerHTML += `
+          <p>
+            ${item.name}<br>
+            Size: <strong>${item.size}</strong><br>
+            Qty: ${item.qty}<br>
+            Price: ₹${item.price * item.qty}
+          </p>
+          <hr>
+        `;
+      });
+    }
+
+    /* ---------- ORDER SUMMARY ---------- */
     function renderSummary() {
       const summaryDiv = document.getElementById("orderSummary");
       summaryDiv.innerHTML = "<h3>Order Summary</h3>";
@@ -142,7 +161,7 @@
         summaryDiv.innerHTML += `
           <p>
             <span>${item.name} × ${item.qty}</span>
-            <span>$${itemTotal}</span>
+            <span>₹${itemTotal}</span>
           </p>
         `;
       });
@@ -150,54 +169,50 @@
       summaryDiv.innerHTML += `
         <p class="total">
           <span>Total</span>
-          <span>$${total}</span>
+          <span>₹${total}</span>
         </p>
       `;
     }
 
-function placeOrder() {
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const house = document.getElementById("house").value.trim();
-  const street = document.getElementById("street").value.trim();
-  const city = document.getElementById("city").value.trim();
-  const state = document.getElementById("state").value.trim();
-  const pincode = document.getElementById("pincode").value.trim();
+    /* ---------- PLACE ORDER ---------- */
+    function placeOrder() {
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const house = document.getElementById("house").value.trim();
+      const street = document.getElementById("street").value.trim();
+      const city = document.getElementById("city").value.trim();
+      const state = document.getElementById("state").value.trim();
+      const pincode = document.getElementById("pincode").value.trim();
 
-  if (!name || !phone || !house || !street || !city || !state || !pincode) {
-    alert("Please fill all address details");
-    return;
-  }
+      if (!name || !phone || !house || !street || !city || !state || !pincode) {
+        alert("Please fill all address details");
+        return;
+      }
 
-  const addressData = {
-    name,
-    phone,
-    house,
-    street,
-    city,
-    state,
-    pincode
-  };
+      const addressData = {
+        name, phone, house, street, city, state, pincode
+      };
 
-  localStorage.setItem("address", JSON.stringify(addressData));
-  localStorage.removeItem("cart");
+      localStorage.setItem("address", JSON.stringify(addressData));
+      localStorage.removeItem("cart");
 
-  window.location.href = "thank.html";
-}
+      window.location.href = "thank.html";
+    }
 
-const savedAddress = JSON.parse(localStorage.getItem("address"));
-if (savedAddress) {
-  name.value = savedAddress.name;
-  phone.value = savedAddress.phone;
-  house.value = savedAddress.house;
-  street.value = savedAddress.street;
-  city.value = savedAddress.city;
-  state.value = savedAddress.state;
-  pincode.value = savedAddress.pincode;
-}
+    /* ---------- ADDRESS AUTOFILL ---------- */
+    const savedAddress = JSON.parse(localStorage.getItem("address"));
+    if (savedAddress) {
+      document.getElementById("name").value = savedAddress.name;
+      document.getElementById("phone").value = savedAddress.phone;
+      document.getElementById("house").value = savedAddress.house;
+      document.getElementById("street").value = savedAddress.street;
+      document.getElementById("city").value = savedAddress.city;
+      document.getElementById("state").value = savedAddress.state;
+      document.getElementById("pincode").value = savedAddress.pincode;
+    }
 
-
-
+    /* ---------- INITIAL LOAD ---------- */
+    renderCartItems();
     renderSummary();
   </script>
 
